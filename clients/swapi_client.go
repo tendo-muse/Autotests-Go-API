@@ -11,7 +11,13 @@ import (
 const baseURL = "https://swapi.info/api/people/"
 
 // Получить персонажа по id
-func GetPerson(personId int, expectedStatusCodes ...int) (*models.Person, error) {
+//
+// Параметры:
+//   - personId: id персонажа
+//   - expectedStatusCodes: Ожидаемый статус-код
+//
+// Возвращает данные персонажа и детализированное сообщение об ошибке, если http-запрос упал с ошибкой
+func GetPerson(personId any, expectedStatusCodes ...int) (*models.Person, error) {
 	// Установка значения по умолчанию, если оно отсутствует
 	expectedStatusCode := 200
 
@@ -25,16 +31,17 @@ func GetPerson(personId int, expectedStatusCodes ...int) (*models.Person, error)
 	}
 
 	response, err := http.Get(fmt.Sprintf("%s%d", baseURL, personId))
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %v", err)
-	}
 
-	// Закрытие данных после их использования
-	defer response.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("ошибка при запросе: %v", err)
+	}
 
 	if response.StatusCode != expectedStatusCode {
 		return nil, fmt.Errorf("не совпал ожидаемый статус-код: %d (ожидался %d)", response.StatusCode, expectedStatusCode)
 	}
+
+	// Закрытие данных после их использования
+	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
